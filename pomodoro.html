@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Pomodoro Clock</title>
+  
+</head>
+<link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet">
+  <script src="script.js"></script>
+
+<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js
+">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<style>
+  :root {
+  --base: #161616;
+  --size: 1.2vw;
+  --transparency: 10%;
+  --border-color: #E3F2FD;
+}
+
+html {
+  box-sizing: border-box;
+  font-size: 1vw;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  text-align: center;
+  font-family: Orbitron, monospace;
+  background-color: var(--base);
+  background-image: repeating-linear-gradient(135deg, rgb(49, 19, 19), rgb(69, 93, 124) var(--transparency), transparent var(--transparency), transparent 50%), repeating-linear-gradient(-135deg, #333, #333 var(--transparency), transparent var(--transparency), transparent 50%);
+  background-size: var(--size) var(--size);
+}
+
+.display__time-left_session {
+  font-weight: 100;
+  font-size: 8vw;
+  margin: 0;
+  color: white;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+.display__time-left_break {
+  font-weight: 100;
+  font-size: 2vw;
+  margin: 0;
+  color: white;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+.nav-strip {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.timer-controls {
+  display: flex;
+}
+
+.timer-controls > * {
+  flex: 1;
+}
+
+.controls {
+  margin-bottom: 1vw;
+  margin-top: 1vw;
+  color: white;
+  font-weight: 100;
+  font-size: 3vw;
+  text-align: center;
+}
+
+input {
+  width: 10vw;
+}
+
+.timer-controls form {
+  flex: 1;
+  display: flex;
+}
+
+.timer-controls input {
+  flex: 1;
+  border: 0;
+  padding: 2rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+
+.timer__button:hover,
+.timer__button:focus {
+  background: rgba(34, 173, 238, 0.2);
+  outline: 0;
+}
+
+.display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  margin-bottom: 0;
+
+}
+
+.timer-wrap {
+  border: 2px solid white;
+  min-width: 7vw;
+  display: inline-flex;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.session {
+  position: relative;
+  width: 100%;
+  border: 2px solid rgb(92, 2, 2);
+}
+
+.break {
+  position: relative;
+  width: 1000%;
+}
+
+.clock {
+  font-weight: 100;
+  font-size: 2rem;
+  margin: 0;
+  color: white;
+  transition: all 1s;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.playing {
+  transform: scale(1.1);
+  color: #ffc600;
+}
+
+.control-nav-bar {
+  display: flex;
+  margin-top: 1vw;
+}
+
+
+.tip-highlight-session,
+.tip-highlight-break {
+  background-color: black;
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
+  background-color: var(--base);
+  font-weight: 800;
+  font-size: 3vw;
+  line-height: 13vw;
+  font-style: italic;
+  color: #E8EAF6;
+  font-family: "Open Sans";
+  text-align: center;
+}
+
+
+.slide_timer__button {
+  font-size: 2em;
+  background: var(--base);
+  color: #fff;
+  border: 0.25rem solid var(--border-color);
+
+  padding: 1rem;
+  margin: 1rem;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+button:hover {
+  color: var(--base);
+}
+button::after {
+  content: "";
+  background: #ecf0f1;
+  position: absolute;
+  z-index: -1;
+  padding: 0.85em 0.75em;
+  display: block;
+}
+button[class^="slide"]::after {
+  transition: all 0.35s;
+}
+button[class^="slide"]:hover::after {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  transition: all 0.35s;
+}
+
+button.slide_from_left::after {
+  top: 0;
+  bottom: 0;
+  left: -100%;
+  right: 100%;
+}
+</style>
+<body>
+  <p>
+    <h1 class="clock">noahssARK POMODORO</h1>
+  </p>
+
+  <div class="nav-strip">
+    <div class="timer-controls">
+      <button data-time="600" class="slide_timer__button slide_from_left">10 minutes Session</button>
+      <button data-time="1200" class="slide_timer__button slide slide_from_left">20 minutes Session</button>
+      <button data-time="1800" class="slide_timer__button slide slide_from_left"> 30 minutes Session</button>
+      <form name="customFormSession" id="custom">
+        <input type=number min=0.1 max=60 step=0.1 name="minutesSession" placeholder="SET SESSION MINUTES">
+      </form>
+      <form name="customFormBreak" id="custom">
+        <input type=number min=0.1 max=60 step=0.1 name="minutesBreak" placeholder="SET BREAK MINUTES">
+      </form>
+    </div>
+
+    <div class="controls">
+      <label for="spacing">Transparency:</label>
+      <input id="transparency" type="range" name="transparency" min="1" max="10" value="1" data-sizing="%">
+
+      <label for="blur">Size:</label>
+      <input id="size" type="range" name="size" min="0" max="25" value="10" data-sizing="px">
+
+      <label for="base">Base Color</label>
+      <input id="base" type="color" name="base" value="#161616">
+    </div>
+
+    <div class="display">
+
+      <div class="timer-wrap">
+        <div class="session">
+          <div class="tip-highlight-session">
+            <h3>Set session minutes</h3></div>
+          <h2 class="clock" id="session_header">Session</h2>
+          <h1 class="display__time-left_session"></h1>
+        </div>
+
+        <div class="break">
+          <div class="tip-highlight-break">
+            <h3>Set break minutes</h3></div>
+          <h2 class="clock" id="break_header">Break</h2>
+          <h1 class="display__time-left_break"></h1>
+        </div>
+
+      </div>
+      <div class="control-nav-bar">
+        <button id="pause-button" class="slide_timer__button slide_from_left">Pause</button>
+        <button id="start-button" class="slide_timer__button slide_from_left">Start</button>
+        <button id="reset-button" class="slide_timer__button slide_from_left">Reset</button>
+      </div>
+    </div>
+  </div>
+
+    
+  <script>
+      $(document).ready(function(){
+        const cacheDisplayTimerSession = document.querySelector('.display__time-left_session');
+const cacheDisplayTimerBreak = document.querySelector('.display__time-left_break');
+const tipHighlightSession = document.querySelector('.tip-highlight-session');
+const tipHighlightBreak = document.querySelector('.tip-highlight-break');
+const buttons = document.querySelectorAll('[data-time]');
+const pause = document.querySelector('#pause-button');
+const start = document.querySelector('#start-button');
+const reset = document.querySelector('#reset-button');
+const sessionHeader = document.querySelector("#session_header");
+const breakHeader = document.querySelector("#break_header");
+const defaultTimerSession = document.querySelector('.display__time-left_session');
+defaultTimerSession.textContent = "00:00";
+const defaultTimerBreak = document.querySelector('.display__time-left_break');
+defaultTimerBreak.textContent = "00:00";
+let countdown;
+let mins;
+let seconds;
+let sessionTimerisEnded = false;
+let isPaused = false;
+var breakSeconds;
+var value_is_set = true;
+var value_is_set_break = true;
+
+//console.log(value_is_set + " global");
+
+//*Session timer */
+function sessionTimer(seconds) {
+  clearInterval(countdown);
+  const t = new Date();
+  const end = t.getTime() + seconds * 1000;
+  displayTimerLeftSession(seconds);
+  console.log({
+    t,
+    end
+  });
+
+  countdown = setInterval(() => {
+    if (!isPaused) {
+      const remainSeconds = Math.round((end - t.getTime()) / 1000);
+      if (remainSeconds < 0) {
+        clearInterval(countdown);
+        breakTimer(breakSeconds);
+        console.log(breakSeconds);
+        sessionHeader.classList.remove('playing');
+        breakHeader.classList.add('playing');
+
+        setTimeout(function() {
+          breakHeader.classList.remove('playing');
+        }, breakSeconds * 1000 + 3000);
+        return;
+      }
+      displayTimerLeftSession(remainSeconds);
+      t.setSeconds(t.getSeconds() + 1);
+    }
+  }, 1000);
+  t.setSeconds(t.getSeconds() + 1) - 1;
+}
+
+/*Break timer*/
+function breakTimer(breakSeconds) {
+  clearInterval(countdown);
+  const t = new Date();
+  const end = t.getTime() + breakSeconds * 1000;
+  displayTimerLeftBreak(breakSeconds);
+  console.log({
+    t,
+    end
+  });
+  countdown = setInterval(() => {
+    if (!isPaused) {
+      const remainSeconds = Math.round((end - t.getTime()) / 1000);
+      if (remainSeconds < 0) {
+        clearInterval(countdown);
+        return;
+      }
+      displayTimerLeftBreak(remainSeconds);
+      t.setSeconds(t.getSeconds() + 1);
+    }
+  }, 1000);
+  t.setSeconds(t.getSeconds() + 1) - 1;
+}
+
+function displayTimerLeftSession(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainderSeconds = seconds % 60;
+  const display = `${minutes}:${remainderSeconds<10?'0':''}${remainderSeconds}`;
+  cacheDisplayTimerSession.textContent = display;
+  /*   console.log({
+      remainderSeconds
+    }, {
+      minutes
+    }); */
+}
+
+function displayTimerLeftBreak(breakSeconds) {
+  const minutes = Math.floor(breakSeconds / 60);
+  const remainderSeconds = breakSeconds % 60;
+  const display = `${minutes}:${remainderSeconds<10?'0':''}${remainderSeconds}`;
+  cacheDisplayTimerBreak.textContent = display;
+
+  /*   console.log({
+      remainderSeconds
+    }, {
+      minutes
+    }); */
+}
+
+var quickTime = function() {
+  tipHighlightSession.style.display = 'none';
+  sessionHeader.classList.add('playing');
+  breakHeader.classList.remove('playing');
+  seconds = parseInt(this.dataset.time);
+  sessionTimer(seconds);
+}
+
+buttons.forEach((button) => button.addEventListener('click', quickTime));
+document.customFormSession.addEventListener('submit', function(e) {
+  e.preventDefault();
+  value_is_set = true;
+  validateForm();
+  //console.log(value_is_set + " customFormSession outside if");
+  if (value_is_set) {
+    value_is_set = true;
+    console.log(value_is_set + " customFormSession inside if");
+    tipHighlightSession.style.display = 'none';
+    sessionHeader.classList.add('playing');
+    breakHeader.classList.remove('playing');
+    seconds = this.minutesSession.value * 60;
+    displayTimerLeftSession(seconds);
+    sessionTimer(seconds);
+    this.reset();
+  } else {
+    value_is_set = false;
+    //console.log(value_is_set + " customFormSession inside else");
+    tipHighlightSession.style.display = 'block';
+  }
+
+});
+
+document.customFormBreak.addEventListener('submit', function(e) {
+  e.preventDefault();
+  value_is_set_break = true;
+  validateFormBreak();
+  if (value_is_set_break) {
+    tipHighlightBreak.style.display = 'none';
+    breakSeconds = this.minutesBreak.value * 60;
+    displayTimerLeftBreak(breakSeconds);
+    this.reset();
+  } else {
+    value_is_set_break = false;
+    //console.log(value_is_set + " customFormSession inside else");
+    tipHighlightBreak.style.display = 'block';
+  }
+
+});
+
+pause.addEventListener('click', function() {
+  isPaused = true;
+  //return;
+});
+
+start.addEventListener('click', function() {
+  isPaused = false;
+});
+
+reset.addEventListener('click', function() {
+  sessionTimer(seconds);
+});
+
+function validateForm() {
+  var x = document.forms["customFormSession"]["minutesSession"].value;
+  if (x == "") {
+    alert("Please set numbers");
+    value_is_set = false;
+    console.log(value_is_set + " " + "validateForm");
+    return false;
+  }
+}
+
+function validateFormBreak() {
+  var x = document.forms["customFormBreak"]["minutesBreak"].value;
+  if (x == "") {
+    alert("Please set numbers");
+    value_is_set_break = false;
+    console.log(value_is_set + " " + "validateForm");
+    return false;
+  }
+}
+
+const inputs = document.querySelectorAll('.controls input');
+
+function handleUpdate() {
+  const suffix = this.dataset.sizing || '';
+  document.documentElement.style.setProperty(`--${this.name}`, this.value + suffix);
+}
+
+inputs.forEach(input => input.addEventListener('change', handleUpdate));
+inputs.forEach(input => input.addEventListener('mousemove', handleUpdate));
+      })
+  </script>
+</body>
+
+</html>
